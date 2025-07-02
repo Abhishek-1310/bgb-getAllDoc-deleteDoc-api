@@ -18,8 +18,8 @@ exports.handler = async (event) => {
     }
 
     try {
-        const body = JSON.parse(event.body || "{}");
-        const fileKey = body.id;
+        // Get fileKey from path parameters, not body
+        const fileKey = event.pathParameters && event.pathParameters.id;
 
         if (!fileKey) {
             return {
