@@ -1,65 +1,56 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
-Globals:
-  Function:
-    Runtime: nodejs18.x
-    Timeout: 10
-    MemorySize: 128
-
 Resources:
 
-  DocStorageBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: my-ceportal-doc-storage
-
-  FileApi:
+  DocManagementApi:
     Type: AWS::Serverless::Api
     Properties:
-      Name: s3-doc-api
+      Name: doc-management-api
       StageName: prod
       Cors:
         AllowMethods: "'GET,DELETE,OPTIONS'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
         AllowOrigin: "'*'"
 
-  ListDocsFunction:
+  ListDocumentsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: bgb-list-docs
-      Handler: listDocs.handler
+      FunctionName: list-documents
+      Handler: getAllDocs.handler
+      Runtime: nodejs18.x
       CodeUri: .
       Environment:
         Variables:
-          BUCKET_NAME: !Ref DocStorageBucket
+          BUCKET_NAME: my-ceportal-doc-storage
       Policies:
         - S3ReadPolicy:
-            BucketName: !Ref DocStorageBucket
+            BucketName: my-ceportal-doc-storage
       Events:
         ApiEvent:
           Type: Api
           Properties:
-            Path: /Alldocuments
+            RestApiId: !Ref DocManagementApi
+            Path: /documents
             Method: GET
-            RestApiId: !Ref FileApi
 
-  DeleteDocFunction:
+  DeleteDocumentFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: bgb-delete-doc
+      FunctionName: delete-document
       Handler: deleteDoc.handler
+      Runtime: nodejs18.x
       CodeUri: .
       Environment:
         Variables:
-          BUCKET_NAME: !Ref DocStorageBucket
+          BUCKET_NAME: my-ceportal-doc-storage
       Policies:
         - S3CrudPolicy:
-            BucketName: !Ref DocStorageBucket
+            BucketName: my-ceportal-doc-storage
       Events:
         ApiEvent:
           Type: Api
           Properties:
-            Path: /document
+            RestApiId: !Ref DocManagementApi
+            Path: /documents/{id}
             Method: DELETE
-            RestApiId: !Ref FileApi
