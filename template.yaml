@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Runtime: nodejs18.x
+    Timeout: 10
+    MemorySize: 128
+
+Resources:
+
+  DocStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-ceportal-doc-storage
+
+  FileApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: s3-doc-api
+      StageName: prod
+      Cors:
+        AllowMethods: "'GET,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'"
+        AllowOrigin: "'*'"
+
+  ListDocsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: bgb-list-docs
+      Handler: listDocs.handler
+      CodeUri: .
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref DocStorageBucket
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref DocStorageBucket
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /Alldocuments
+            Method: GET
+            RestApiId: !Ref FileApi
+
+  DeleteDocFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: bgb-delete-doc
+      Handler: deleteDoc.handler
+      CodeUri: .
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref DocStorageBucket
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref DocStorageBucket
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /document
+            Method: DELETE
+            RestApiId: !Ref FileApi
