@@ -19,7 +19,10 @@ exports.handler = async (event) => {
 
     try {
         // Get fileKey from path parameters, not body
-        const fileKey = event.pathParameters && event.pathParameters.id;
+
+        const fileKeyRaw = event.pathParameters && event.pathParameters.id;
+        const fileKey = decodeURIComponent(fileKeyRaw || "").trim();
+        console.log("File key:", fileKey);
 
         if (!fileKey) {
             return {
